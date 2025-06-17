@@ -11,15 +11,52 @@ const Navbar = () => {
     navigate('/login');
   };
 
-  return (
-    <nav className="navbar navbar-expand-lg navbar-dark bg-dark px-3">
-      <Link className="navbar-brand" to="/">Book Manager</Link>
+  const getRoleIcon = (role) => {
+    switch (role) {
+      case 'Admin':
+        return '👑';
+      case 'Author':
+        return '✍️';
+      case 'User':
+      default:
+        return '👤';
+    }
+  };
 
-      <div className="collapse navbar-collapse">
+  const getRoleClass = (role) => {
+    switch (role) {
+      case 'Admin':
+        return 'status-admin';
+      case 'Author':
+        return 'status-author';
+      case 'User':
+      default:
+        return 'status-user';
+    }
+  };
+
+  return (
+    <nav className="navbar navbar-expand-lg navbar-dark px-3">
+      <Link className="navbar-brand" to="/">
+        📚 Book Manager
+      </Link>
+
+      <button 
+        className="navbar-toggler" 
+        type="button" 
+        data-bs-toggle="collapse" 
+        data-bs-target="#navbarNav"
+      >
+        <span className="navbar-toggler-icon"></span>
+      </button>
+
+      <div className="collapse navbar-collapse" id="navbarNav">
         <ul className="navbar-nav me-auto">
           {isAuthenticated && (
             <li className="nav-item">
-              <Link className="nav-link" to="/books">Books</Link>
+              <Link className="nav-link" to="/books">
+                📖 My Books
+              </Link>
             </li>
           )}
         </ul>
@@ -27,24 +64,32 @@ const Navbar = () => {
         <ul className="navbar-nav ms-auto">
           {isAuthenticated ? (
             <>
-              <li className="nav-item">
-                <span className="nav-link disabled">Welcome, {user?.Role}</span>
+              <li className="nav-item d-flex align-items-center me-3">
+                <span className={`status-badge ${getRoleClass(user?.Role)}`}>
+                  {getRoleIcon(user?.Role)} {user?.Role}
+                </span>
               </li>
               <li className="nav-item">
-                <button className="btn btn-outline-light btn-sm ms-2" onClick={handleLogout}>
-                  Logout
+                <button 
+                  className="btn btn-outline-light btn-sm" 
+                  onClick={handleLogout}
+                >
+                  🚪 Logout
                 </button>
               </li>
             </>
           ) : (
             <>
-              <li className="nav-item">
-                <Link className="btn btn-outline-light btn-sm me-2" to="/login">Login</Link>
+              <li className="nav-item me-2">
+                <Link className="btn btn-outline-light btn-sm" to="/login">
+                  🔐 Login
+                </Link>
               </li>
               <li className="nav-item">
-                <Link className="btn btn-outline-light btn-sm" to="/register">Register</Link>
+                <Link className="btn btn-outline-light btn-sm" to="/register">
+                  📝 Register
+                </Link>
               </li>
-              
             </>
           )}
         </ul>
