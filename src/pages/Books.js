@@ -13,8 +13,7 @@ function Books() {
   const [books, setBooks] = useState([]);
   const [bookForm, setBookForm] = useState(initialBookState);
   const [editingISBN, setEditingISBN] = useState(null);
-  const { logout } = useAuth();
-  const { user } = useAuth();
+  const { logout, user } = useAuth();
 
   useEffect(() => {
     fetchBooks();
@@ -25,6 +24,7 @@ function Books() {
       const data = await bookService.getAllBooks();
       setBooks(data);
     } catch (err) {
+      console.error("Error fetching books:", err);
       alert("Session expired. Logging out.");
       logout();
     }
@@ -51,6 +51,7 @@ function Books() {
       setEditingISBN(null);
       fetchBooks();
     } catch (err) {
+      console.error("Error saving book:", err);
       alert("Failed to save book.");
     }
   };
@@ -66,6 +67,7 @@ function Books() {
         await bookService.deleteBook(isbn);
         fetchBooks();
       } catch (err) {
+        console.error("Error deleting book:", err);
         alert("Failed to delete.");
       }
     }
@@ -76,6 +78,9 @@ function Books() {
     setEditingISBN(null);
   };
 
+  // Check if current user is Admin
+  const isAdmin = user?.Role === "Admin";
+
   return (
     <div className="container mt-4 fade-in">
       <div className="page-header">
@@ -84,86 +89,94 @@ function Books() {
         </h1>
         <p className="page-subtitle">
           Manage your book collection with ease
+          {user && (
+            <span className="ms-2">
+              | Logged in as: <strong>{user.Role}</strong>
+            </span>
+          )}
         </p>
       </div>
 
-      <div className="book-form bounce-in">
-        <h2 className="form-section-title">
-          {editingISBN ? "📝 Update Book" : "➕ Add New Book"}
-        </h2>
-        <form onSubmit={handleAddOrUpdate}>
-          <div className="row">
-            <div className="col-md-3 mb-3">
-              <label className="form-label">ISBN</label>
-              <input
-                type="text"
-                name="ISBN"
-                className="form-control"
-                placeholder="Enter ISBN"
-                value={bookForm.ISBN}
-                onChange={handleChange}
-                disabled={editingISBN !== null}
-                required
-              />
-            </div>
-            <div className="col-md-3 mb-3">
-              <label className="form-label">Title</label>
-              <input
-                type="text"
-                name="Title"
-                className="form-control"
-                placeholder="Enter book title"
-                value={bookForm.Title}
-                onChange={handleChange}
-                required
-              />
-            </div>
-            <div className="col-md-3 mb-3">
-              <label className="form-label">Author</label>
-              <input
-                type="text"
-                name="Author"
-                className="form-control"
-                placeholder="Enter author name"
-                value={bookForm.Author}
-                onChange={handleChange}
-                required
-              />
-            </div>
-            <div className="col-md-2 mb-3">
-              <label className="form-label">Year</label>
-              <input
-                type="number"
-                name="PublicationYear"
-                className="form-control"
-                placeholder="Year"
-                value={bookForm.PublicationYear}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="col-md-1 mb-3 d-flex flex-column">
-              <label className="form-label">&nbsp;</label>
-              <div className="action-buttons">
-                <button
-                  type="submit"
-                  className={`btn btn-${editingISBN ? "warning" : "primary"} w-100`}
-                >
-                  {editingISBN ? "Update" : "Add"}
-                </button>
-                {editingISBN && (
+      {/* Only show form for Admin users */}
+      {isAdmin && (
+        <div className="book-form bounce-in">
+          <h2 className="form-section-title">
+            {editingISBN ? "📝 Update Book" : "➕ Add New Book"}
+          </h2>
+          <form onSubmit={handleAddOrUpdate}>
+            <div className="row">
+              <div className="col-md-3 mb-3">
+                <label className="form-label">ISBN</label>
+                <input
+                  type="text"
+                  name="ISBN"
+                  className="form-control"
+                  placeholder="Enter ISBN"
+                  value={bookForm.ISBN}
+                  onChange={handleChange}
+                  disabled={editingISBN !== null}
+                  required
+                />
+              </div>
+              <div className="col-md-3 mb-3">
+                <label className="form-label">Title</label>
+                <input
+                  type="text"
+                  name="Title"
+                  className="form-control"
+                  placeholder="Enter book title"
+                  value={bookForm.Title}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+              <div className="col-md-3 mb-3">
+                <label className="form-label">Author</label>
+                <input
+                  type="text"
+                  name="Author"
+                  className="form-control"
+                  placeholder="Enter author name"
+                  value={bookForm.Author}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+              <div className="col-md-2 mb-3">
+                <label className="form-label">Year</label>
+                <input
+                  type="number"
+                  name="PublicationYear"
+                  className="form-control"
+                  placeholder="Year"
+                  value={bookForm.PublicationYear}
+                  onChange={handleChange}
+                />
+              </div>
+              <div className="col-md-1 mb-3 d-flex flex-column">
+                <label className="form-label">&nbsp;</label>
+                <div className="action-buttons">
                   <button
-                    type="button"
-                    className="btn btn-secondary w-100 mt-2"
-                    onClick={handleCancel}
+                    type="submit"
+                    className={`btn btn-${editingISBN ? "warning" : "primary"} w-100`}
                   >
-                    Cancel
+                    {editingISBN ? "Update" : "Add"}
                   </button>
-                )}
+                  {editingISBN && (
+                    <button
+                      type="button"
+                      className="btn btn-secondary w-100 mt-2"
+                      onClick={handleCancel}
+                    >
+                      Cancel
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        </form>
-      </div>
+          </form>
+        </div>
+      )}
 
       <div className="books-section slide-in">
         <div className="books-header">
@@ -192,7 +205,10 @@ function Books() {
                       <div className="empty-state-icon">📚</div>
                       <div className="empty-state-title">No books found</div>
                       <div className="empty-state-description">
-                        Start by adding your first book to the collection
+                        {isAdmin 
+                          ? "Start by adding your first book to the collection"
+                          : "No books available in the library at the moment"
+                        }
                       </div>
                     </div>
                   </td>
@@ -205,7 +221,7 @@ function Books() {
                     <td>{book.Author}</td>
                     <td>{book.PublicationYear}</td>
                     <td>
-                      {user?.Role === "Admin" && (
+                      {isAdmin ? (
                         <div className="action-buttons">
                           <button
                             className="btn btn-info btn-sm"
@@ -221,9 +237,10 @@ function Books() {
                             🗑️ Delete
                           </button>
                         </div>
-                      )}
-                      {user?.Role !== "Admin" && (
-                        <span className="text-muted">View Only</span>
+                      ) : (
+                        <span className="text-muted">
+                          <small>👁️ View Only</small>
+                        </span>
                       )}
                     </td>
                   </tr>

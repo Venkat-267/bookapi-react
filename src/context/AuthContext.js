@@ -14,13 +14,24 @@ export const AuthProvider = ({ children }) => {
     }
   });
 
+  const [user, setUser] = useState(() => {
+    const userId = localStorage.getItem("UserId");
+    const role = localStorage.getItem("Role");
+    if (userId && role) {
+      return { UserId: userId, Role: role };
+    }
+    return null;
+  });
+
   const login = (data) => {
     localStorage.setItem("AccessToken", data.AccessToken);
     localStorage.setItem("RefreshToken", data.RefreshToken);
     localStorage.setItem("UserId", data.UserId);
     localStorage.setItem("Role", data.Role);
     localStorage.setItem("tokenExpiry", Date.now() + 60 * 60 * 1000); // 1 hour
+    
     setAuth({ isAuthenticated: true });
+    setUser({ UserId: data.UserId, Role: data.Role });
 
     setTimeout(() => {
       logout();
@@ -30,10 +41,20 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     localStorage.clear();
     setAuth({ isAuthenticated: false });
+    setUser(null);
   };
 
+  // Check if user is authenticated (for backward compatibility)
+  const isAuthenticated = auth.isAuthenticated;
+
   return (
-    <AuthContext.Provider value={{ auth, login, logout }}>
+    <AuthContext.Provider value={{ 
+      auth, 
+      user, 
+      isAuthenticated, 
+      login, 
+      logout 
+    }}>
       {children}
     </AuthContext.Provider>
   );
